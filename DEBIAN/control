@@ -1,0 +1,11 @@
+Package: togler
+Version: 0.0.0
+Section: utils
+Priority: optional
+Maintainer: caesar <caesarmuksid@gmail.com>
+Build-Depends: debhelper (>= 11)
+Architecture: all
+Depends: xdotool
+Description: Togler: toggle focus and visibility of X11 apps
+ A small CLI utility to focus or minimize a running X11 application using xdotool.
+

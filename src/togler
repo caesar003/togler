@@ -1,0 +1,48 @@
+#!/bin/bash
+
+VERSION="__VERSION__"
+
+if [[ "$1" == "--version" || "$1" == "-v" ]]; then
+	echo "togler version $VERSION"
+	exit 0
+fi
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <application-name>"
+	exit 1
+fi
+
+APP_NAME="$1"
+
+if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+	echo "Warning: Wayland detected!"
+	echo "togler relies on xdotool, which does not work under Wayland."
+	echo "For best results, log in using an X11 session instead."
+	exit 1
+fi
+
+if ! command -v xdotool &>/dev/null; then
+	echo "Error: xdotool is not installed. Install it with: sudo apt install -y xdotool"
+	exit 1
+fi
+
+if pgrep -x "$APP_NAME" >/dev/null; then
+	active_win_id=$(xdotool getactivewindow 2>/dev/null)
+	app_win_ids=$(xdotool search --onlyvisible --class "$APP_NAME")
+
+	if [ -z "$app_win_ids" ]; then
+		exit 0
+	fi
+
+	for win_id in $app_win_ids; do
+		if [ "$win_id" = "$active_win_id" ]; then
+			xdotool windowminimize "$win_id"
+			exit 0
+		fi
+	done
+
+	xdotool windowactivate $(echo "$app_win_ids" | head -n 1)
+else
+	"$APP_NAME" &
+fi
+
