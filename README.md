@@ -88,7 +88,7 @@ You can assign keybindings to these one-liner scripts using your desktop environ
 
     - **Name:** Toggle Postman
     - **Command:** `/home/youruser/.local/bin/toggle-postman.sh`
-    - **Shortcut:** `Alt + P`
+    - **Shortcut:** `Alt + P` (or any other combination of your choice)
 
 Refer to your desktop environment’s documentation if you're using KDE, XFCE, i3, etc.
 
