@@ -1,5 +1,4 @@
 #!/bin/bash
-
 VERSION="__VERSION__"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
@@ -28,21 +27,76 @@ fi
 
 if pgrep -x "$APP_NAME" >/dev/null; then
 	active_win_id=$(xdotool getactivewindow 2>/dev/null)
-	app_win_ids=$(xdotool search --onlyvisible --class "$APP_NAME")
+
+	# Get all visible windows for the app, sorted by creation time (window ID is generally chronological)
+	app_win_ids=$(xdotool search --onlyvisible --class "$APP_NAME" | sort -n)
 
 	if [ -z "$app_win_ids" ]; then
 		exit 0
 	fi
 
-	for win_id in $app_win_ids; do
+	# Convert to array for easier handling
+	win_array=($app_win_ids)
+	num_windows=${#win_array[@]}
+
+	# Single instance case
+	if [ $num_windows -eq 1 ]; then
+		win_id=${win_array[0]}
 		if [ "$win_id" = "$active_win_id" ]; then
+			# Active window -> minimize
 			xdotool windowminimize "$win_id"
-			exit 0
+		else
+			# Not active -> maximize/activate
+			xdotool windowactivate "$win_id"
+		fi
+		exit 0
+	fi
+
+	# Multiple instance case
+	active_app_window=""
+	active_index=-1
+
+	# Find which app window (if any) is currently active
+	for i in "${!win_array[@]}"; do
+		if [ "${win_array[$i]}" = "$active_win_id" ]; then
+			active_app_window="${win_array[$i]}"
+			active_index=$i
+			break
 		fi
 	done
 
-	xdotool windowactivate $(echo "$app_win_ids" | head -n 1)
+	# Create temporary state tracking for multiple instances
+	mkdir -p /tmp/togler 2>/dev/null || true
+	state_file="/tmp/togler/${APP_NAME}_state"
+
+	# Read the last action from state file
+	last_action=""
+	if [ -f "$state_file" ]; then
+		last_action=$(cat "$state_file" 2>/dev/null)
+	fi
+
+	if [ $active_index -eq -1 ]; then
+		# No app window is active -> activate first
+		xdotool windowactivate "${win_array[0]}"
+		echo "activated_${win_array[0]}" >"$state_file"
+	elif [ $active_index -eq $((num_windows - 1)) ]; then
+		# Last window is active -> minimize it and cycle is complete
+		xdotool windowminimize "$active_app_window"
+		echo "minimized_$active_app_window" >"$state_file"
+	else
+		# Check if we just minimized the last window (and bounced back to second-to-last)
+		if [[ "$last_action" == "minimized_"* ]] && [ $active_index -eq $((num_windows - 2)) ]; then
+			# We just finished a cycle, start over
+			xdotool windowactivate "${win_array[0]}"
+			echo "activated_${win_array[0]}" >"$state_file"
+		else
+			# Normal case: activate next window
+			next_index=$((active_index + 1))
+			xdotool windowactivate "${win_array[$next_index]}"
+			echo "activated_${win_array[$next_index]}" >"$state_file"
+		fi
+	fi
 else
+	# App not running -> start it
 	"$APP_NAME" &
 fi
-

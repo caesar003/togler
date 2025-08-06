@@ -39,15 +39,15 @@ For each application you want to toggle quickly, create a script like:
 
 ```bash
 #!/bin/bash
-# ~/.local/bin/toggle-chrome.sh
+# ~/.local/bin/toggle-postman.sh
 
-togler chrome
+togler postman
 ```
 
 Make it executable:
 
 ```sh
-chmod +x ~/.local/bin/toggle-chrome.sh
+chmod +x ~/.local/bin/toggle-postman.sh
 ```
 
 Add `~/.local/bin` to your `PATH` if it’s not already there.
