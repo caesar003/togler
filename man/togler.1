@@ -1,19 +1,29 @@
-.TH TOGLER 1 "July 2025" "__VERSION__" "User Commands"
+.TH TOGLER 1 "August 2025" "__VERSION__" "User Commands"
 .SH NAME
 togler \- toggle application visibility using xdotool
 .SH SYNOPSIS
 .B togler
-.I <application-name>
+\fB-t\fR \fI<application-name>\fR
 .SH DESCRIPTION
 Togler is a minimal utility to toggle focus and minimize visibility of an X11 application window using xdotool. Ideal for productivity workflows.
+
+This tool is best used when bound to a keyboard shortcut for quick toggling of GUI apps.
+
 .SH OPTIONS
 .TP
-.B \-v, --version
+.BR -t ", " --toggle " <application-name>"
+Toggle the window(s) of the specified application. Will activate, cycle, or minimize based on current state.
+.TP
+.BR -v ", " --version
 Show version and exit.
+.TP
+.BR -h ", " --help
+Show help message and exit.
+
 .SH EXAMPLES
-.B togler firefox
+.B togler -t firefox
 .br
 Toggles the Firefox window.
+
 .SH AUTHOR
 Written by Caesar (https://github.com/caesar003).
-
