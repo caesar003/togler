@@ -1,0 +1,55 @@
+# Helper to prompt for input if the provided value is empty.
+# Usage: var=$(_get_input "$var" "Enter value: ")
+#
+# $1: The current value of the variable.
+# $2: The prompt text to display to the user.
+# Returns: The original value if not empty, or the user's new input.
+_get_input() {
+	local current_value="$1"
+	local prompt_text="$2"
+	if [ -z "$current_value" ]; then
+		read -rp "$prompt_text" current_value
+	fi
+	echo "$current_value"
+}
+
+# Finds the GSettings path for a shortcut based on the app name.
+# Usage: path=$(_find_shortcut_path "firefox")
+#
+# $1: The application name to search for.
+# Returns: The full GSettings path if found, otherwise an empty string.
+_find_shortcut_path() {
+    local app_name="$1"
+    local existing
+    existing=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+
+    for i in {0..50}; do
+        local path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom$i/"
+        if ! echo "$existing" | grep -q "custom$i"; then
+            continue
+        fi
+
+        local command
+        command=$(gsettings get "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path" command 2>/dev/null)
+
+        if [[ "$command" == "'toggle-$app_name'" || "$command" == "'togler --toggle $app_name'" ]]; then
+            echo "$path"
+            return 0 # Success
+        fi
+    done
+    return 1 # Not found
+}
+
+# Finds the next available index for a new custom shortcut.
+# Usage: index=$(_get_next_shortcut_index)
+# Returns: The integer index of the next available slot.
+_get_next_shortcut_index() {
+    local existing
+    existing=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+    local new_index=0
+    while echo "$existing" | grep -q "custom$new_index"; do
+        new_index=$((new_index + 1))
+    done
+    echo "$new_index"
+}
+

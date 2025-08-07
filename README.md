@@ -29,6 +29,10 @@ Instead: **One dedicated key per app**. Press → show. Press again → hide.
 - **Zero configuration** - Works immediately after install
 - **GNOME integration** - Simple shortcut creation
 - **Lightweight** - Pure Bash with minimal dependencies
+- **Interactive prompts** for missing arguments
+- **List all bindings** in one command
+- **Delete bindings** with confirmation
+- **Smarter fallback** logic if keybinding isn't found
 
 ---
 
@@ -38,9 +42,11 @@ Instead: **One dedicated key per app**. Press → show. Press again → hide.
 togler -t firefox          # Toggle Firefox visibility
 togler -b "<Super>f" code  # Bind Super+F to VS Code
 togler -a slack            # Create shortcut for Slack (interactive)
+togler -l                  # List all Togler-managed shortcuts
+togler -d code             # Delete keybinding for VS Code
 ```
 
-> 💡 **Pro Tip:** Assign to keyboard shortcuts for true one-key access! Running from terminal reminds you.
+> 💡 **Pro Tip:** Togler is interactive — if you skip arguments, it will prompt you!
 
 ---
 
