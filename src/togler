@@ -9,10 +9,110 @@ print_version() {
 
 print_help() {
 	echo "Usage:"
-	echo "  togler --version | -v              Show version"
-	echo "  togler --help    | -h              Show help"
-	echo "  togler --toggle  | -t <app-name>   Toggle application windows"
+	echo "  togler --version | -v"
+	echo "        Show version information"
+	echo
+	echo "  togler --help | -h"
+	echo "        Show this help message"
+	echo
+	echo "  togler --toggle | -t <app-name>"
+	echo "        Toggle visibility of windows for the specified application"
+	echo
+	echo "  togler --bind | -b [<key>] [<app-name>]"
+	echo "        Bind a key combination to toggle the application"
+	echo "        Prompts interactively if arguments are not provided"
+	echo
+	echo "  togler --add | -a [<app-name>] [<shortcut-name>] [<key>]"
+	echo "        Create a GNOME shortcut to toggle an application"
+	echo "        Prompts interactively for missing arguments"
+	echo
+	echo "Examples:"
+	echo "  togler -t code"
+	echo "  togler -b '<Super>c' code"
+	echo "  togler -a firefox 'Toggle Firefox' '<Alt>f'"
 	exit 0
+}
+
+bind_key() {
+	local key_binding="$1"
+	local app_name="$2"
+
+	# Interactive prompts for missing parameters
+	if [ -z "$key_binding" ]; then
+		read -rp "🎹 Enter keybinding (e.g., <Alt>f, <Super>Return): " key_binding
+		if [ -z "$key_binding" ]; then
+			echo "❌ Error: Keybinding cannot be empty"
+			exit 1
+		fi
+	fi
+
+	if [ -z "$app_name" ]; then
+		read -rp "📱 Enter application name (e.g., firefox, code): " app_name
+		if [ -z "$app_name" ]; then
+			echo "❌ Error: Application name cannot be empty"
+			exit 1
+		fi
+	fi
+
+	# Get existing custom keybindings
+	local existing=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+
+	# Check if there are any custom keybindings at all
+	if [ "$existing" = "@as []" ]; then
+		echo "❌ Error: No existing shortcuts found for '$app_name'"
+		echo "💡 Use 'togler --add $app_name' to create a new shortcut first"
+		exit 1
+	fi
+
+	# Find existing binding for this app
+	local found_path=""
+	local old_binding=""
+
+	# Search through all existing custom keybindings
+	for i in {0..50}; do # Check up to 50 slots (should be more than enough)
+		local path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom$i/"
+
+		# Skip if this path doesn't exist in the custom-keybindings array
+		if ! echo "$existing" | grep -q "custom$i"; then
+			continue
+		fi
+
+		# Get the command for this binding
+		local command=$(gsettings get "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path" command 2>/dev/null)
+
+		# Check if this command matches our app (handle both patterns)
+		if [[ "$command" == "'toggle-$app_name'" ]] || [[ "$command" == "'togler --toggle $app_name'" ]]; then
+			found_path="$path"
+			old_binding=$(gsettings get "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path" binding 2>/dev/null)
+			break
+		fi
+	done
+
+	# If no existing binding found, offer to create one
+	if [ -z "$found_path" ]; then
+		echo "❌ Error: No existing shortcut found for '$app_name'"
+		echo "💡 Available options:"
+		echo "   1. Use 'togler --add $app_name \"Toggle $app_name\" \"$key_binding\"' to create a new shortcut"
+		echo "   2. Check existing shortcuts with: gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings"
+
+		read -rp "🤔 Would you like to create a new shortcut instead? [y/N]: " create_new
+		if [[ "$create_new" == "y" || "$create_new" == "Y" ]]; then
+			add_app "$app_name" "Toggle $app_name" "$key_binding"
+		else
+			exit 1
+		fi
+		return
+	fi
+
+	# Update the existing binding
+	if gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$found_path" binding "$key_binding"; then
+		echo "✅ Successfully updated keybinding for '$app_name'"
+		echo "   Old binding: $(echo "$old_binding" | tr -d "'")"
+		echo "   New binding: $key_binding"
+	else
+		echo "❌ Error: Failed to update keybinding"
+		exit 1
+	fi
 }
 
 toggle() {
@@ -95,6 +195,94 @@ toggle() {
 	fi
 }
 
+add_app() {
+	local app_command="$1"
+	local shortcut_name="$2"
+	local key_binding="$3"
+
+	# Interactive prompts for missing parameters
+	if [ -z "$app_command" ]; then
+		echo "🛠  Add new toggleable app"
+		read -rp "👉 Application command (e.g., code, firefox): " app_command
+		if [ -z "$app_command" ]; then
+			echo "❌ Error: Application command cannot be empty"
+			exit 1
+		fi
+	fi
+
+	if [ -z "$shortcut_name" ]; then
+		read -rp "📛 Shortcut name (e.g., Toggle Firefox): " shortcut_name
+		if [ -z "$shortcut_name" ]; then
+			shortcut_name="Toggle $app_command"
+		fi
+	fi
+
+	if [ -z "$key_binding" ]; then
+		read -rp "🎹 Keybinding (e.g., <Alt>f): " key_binding
+		if [ -z "$key_binding" ]; then
+			echo "❌ Error: Keybinding cannot be empty"
+			exit 1
+		fi
+	fi
+
+	local toggle_script="$HOME/.local/bin/toggle-$app_command"
+	mkdir -p "$(dirname "$toggle_script")"
+
+	# Check if script already exists
+	if [ -f "$toggle_script" ]; then
+		echo "⚠️  $toggle_script already exists. Overwrite? [y/N]"
+		read -r confirm
+		if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+			echo "❌ Operation cancelled"
+			exit 0
+		fi
+	fi
+
+	# Create the toggle script
+	if cat <<EOF >"$toggle_script"; then
+#!/bin/bash
+togler --toggle $app_command
+EOF
+		chmod +x "$toggle_script"
+		echo "✅ Created: $toggle_script"
+	else
+		echo "❌ Error: Failed to create toggle script"
+		exit 1
+	fi
+
+	# Get existing custom keybindings
+	local existing=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+
+	# Find next available slot
+	local new_index=0
+	while echo "$existing" | grep -q "custom$new_index"; do
+		new_index=$((new_index + 1))
+	done
+
+	local new_path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom$new_index/"
+
+	# Update custom-keybindings list
+	local updated
+	if [ "$existing" = "@as []" ]; then
+		updated="['$new_path']"
+	else
+		updated=$(echo "$existing" | sed 's/]$//')
+		updated="$updated, '$new_path']"
+	fi
+
+	# Apply the keybinding
+	if gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$updated" &&
+		gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$new_path" name "$shortcut_name" &&
+		gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$new_path" command "$toggle_script" &&
+		gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$new_path" binding "$key_binding"; then
+		echo "🎉 Successfully added GNOME shortcut for '$shortcut_name' with keybinding $key_binding"
+		echo "📎 Make sure ~/.local/bin is in your \$PATH"
+	else
+		echo "❌ Error: Failed to create GNOME keybinding"
+		exit 1
+	fi
+}
+
 # ---------------------------
 # Entry point
 # ---------------------------
@@ -113,6 +301,12 @@ case "$1" in
 		exit 1
 	fi
 	toggle
+	;;
+-a | --add)
+	add_app "$2" "$3" "$4"
+	;;
+-b | --bind)
+	bind_key "$2" "$3"
 	;;
 *)
 	print_help
