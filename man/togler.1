@@ -3,16 +3,42 @@
 togler \- toggle application visibility using xdotool
 .SH SYNOPSIS
 .B togler
-\fB-t\fR \fI<application-name>\fR
+[\fB-t\fR \fI<application-name>\fR]
+.br
+.B togler
+[\fB-b\fR [\fI<key>\fR] [\fI<application-name>\fR]]
+.br
+.B togler
+[\fB-a\fR [\fI<application-name>\fR] [\fI<shortcut-name>\fR] [\fI<key>\fR]]
+.br
+.B togler
+[\fB-v\fR | \fB--version\fR]
+.br
+.B togler
+[\fB-h\fR | \fB--help\fR]
 .SH DESCRIPTION
-Togler is a minimal utility to toggle focus and minimize visibility of an X11 application window using xdotool. Ideal for productivity workflows.
+Togler is a lightweight utility to toggle the visibility and focus state of GUI applications using xdotool on X11 desktops.
 
-This tool is best used when bound to a keyboard shortcut for quick toggling of GUI apps.
+Primarily designed to be used with GNOME keybindings for fast application access, Togler can:
+.IP \[bu] 2
+Toggle focus/minimize state of app windows
+.IP \[bu]
+Bind key combinations to specific applications
+.IP \[bu]
+Create GNOME custom keybindings interactively or via arguments
+
+It provides minimal but powerful functionality for workflow optimization.
 
 .SH OPTIONS
 .TP
 .BR -t ", " --toggle " <application-name>"
-Toggle the window(s) of the specified application. Will activate, cycle, or minimize based on current state.
+Toggle the window(s) of the specified application. If the app is running, it will activate, cycle between open windows, or minimize. If not running, it will be launched.
+.TP
+.BR -b ", " --bind " [<key>] [<application-name>]"
+Bind a custom key to toggle an application. If key or app name is missing, you’ll be prompted interactively.
+.TP
+.BR -a ", " --add " [<application-name>] [<shortcut-name>] [<key>]"
+Add a GNOME custom keybinding to toggle an app. Prompts for any missing arguments.
 .TP
 .BR -v ", " --version
 Show version and exit.
@@ -21,9 +47,31 @@ Show version and exit.
 Show help message and exit.
 
 .SH EXAMPLES
+.TP
 .B togler -t firefox
-.br
-Toggles the Firefox window.
+Toggle the Firefox window.
+.TP
+.B togler -b "<Alt>f" firefox
+Bind Alt+F to toggle Firefox.
+.TP
+.B togler -a code "Toggle VSCode" "<Super>c"
+Create a GNOME shortcut to toggle VS Code with Super+C.
+
+.SH ENVIRONMENT
+This script depends on the following:
+.TP
+.B xdotool
+Used to interact with window states. Not compatible with Wayland.
+.TP
+.B gsettings
+Used to create and manage GNOME keybindings.
+
+.SH SEE ALSO
+xdotool(1), gsettings(1)
 
 .SH AUTHOR
-Written by Caesar (https://github.com/caesar003).
+Written by Caesar (https://github.com/caesar003)
+
+.SH BUGS
+Wayland is not supported. Togler works only in X11 sessions due to its use of xdotool.
+

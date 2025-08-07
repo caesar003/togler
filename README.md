@@ -1,103 +1,145 @@
 # togler
 
-**Togler** (yes, not a typo) is a minimalist command-line tool to toggle the focus and visibility of GUI applications in X11 using `xdotool`.
+**Togler** (yes, not a typo) is a minimalist command-line tool to toggle the focus and visibility of GUI applications on X11 using `xdotool`.
+
+Designed for speed and simplicity, it’s perfect for creating custom keyboard shortcuts that launch or hide your most-used apps.
 
 ---
 
-## Features
+## ✨ Features
 
--   Toggle application windows on/off the screen
--   Smart minimize when app is already focused
--   Clean CLI interface with `--toggle`, `--help`, and `--version`
--   Friendly reminder when invoked from an interactive terminal
--   Simple script, no dependencies beyond `xdotool`
+-   Toggle app windows on/off screen with a single command
+-   Cycle between multiple windows of the same app
+-   Smart minimize if already focused
+-   Automatically launch the app if not running
+-   Interactive helpers for creating GNOME keybindings
+-   Clean CLI interface: `--toggle`, `--add`, `--bind`, `--help`, `--version`
+-   Zero config required. Just install and go.
+-   Pure Bash. No dependencies besides `xdotool` and `gsettings`
 
 ---
 
-## Usage
+## 🚀 Usage
 
 ```sh
-togler -t firefox
-togler -v
-togler -h
+togler -t firefox          # Toggle Firefox
+togler -b "<Alt>f" code    # Bind Alt+F to toggle VS Code
+togler -a code             # Add GNOME shortcut for VS Code (interactive)
+togler -v                  # Show version
+togler -h                  # Show help
 ```
 
--   `-t`, `--toggle <app>`: Toggle the application window (focus, minimize, or launch if not running)
--   `-v`, `--version`: Show current version
--   `-h`, `--help`: Show usage instructions
+### Options
 
-If the window is focused, it gets minimized. If it's not focused, it gets activated. If the app isn't running, it's launched.
+| Option                           | Description                                                                 |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| `-t`, `--toggle <app>`           | Toggle the app’s window(s). Activate, cycle, minimize, or launch as needed  |
+| `-b`, `--bind [key] [app]`       | Bind a key to toggle an app. Prompts interactively if arguments are missing |
+| `-a`, `--add [app] [name] [key]` | Create GNOME shortcut. Prompts for any missing values interactively         |
+| `-v`, `--version`                | Show current version                                                        |
+| `-h`, `--help`                   | Show usage instructions                                                     |
 
-> 💡 **Tip:** If you're running this from the terminal, consider assigning it to a keyboard shortcut for smoother workflows.
+> 💡 **Tip:** If you’re running `togler` from a terminal, it’ll remind you to assign it to a keyboard shortcut for smoother use.
 
 ---
 
-## Installation
+## 📦 Installation
 
-Download the latest `.deb` package from the [release page](https://github.com/caesar003/togler/releases) and install:
+Download the latest `.deb` from the [Releases](https://github.com/caesar003/togler/releases) page and install:
 
 ```sh
 sudo dpkg -i togler*.deb
 ```
 
----
-
-## Requirements
-
--   X11 session (does **not** work under Wayland)
--   `xdotool` installed
+Or just copy the `togler` script to your `~/.local/bin` and make it executable.
 
 ---
 
-## Post-Install Setup (Recommended)
+## ⚙️ Requirements
 
-To get the most out of `togler`, you’ll typically want to:
+-   X11 session (Wayland is **not** supported)
+-   `xdotool` installed:
 
-### 1. Create One-Liner Launcher Scripts
+    ```sh
+    sudo apt install xdotool
+    ```
 
-For each application you want to toggle quickly, create a script like:
+---
 
-```bash
-#!/bin/bash
-# ~/.local/bin/toggle-postman.sh
+## 🔧 Post-Install Setup (Recommended)
 
-togler -t postman
-```
-
-Make it executable:
+### 1. Use `--add` to Define Shortcuts
 
 ```sh
-chmod +x ~/.local/bin/toggle-postman.sh
+togler --add firefox "Toggle Firefox" "<Alt>f"
 ```
 
-Add `~/.local/bin` to your `PATH` if it’s not already there.
+Or run `togler --add` alone and follow the prompts.
+
+This will:
+
+-   Create a script in `~/.local/bin/toggle-firefox`
+-   Add a GNOME keyboard shortcut bound to your chosen key
+
+### 2. Bind or Rebind Later with `--bind`
+
+Need to change the key later?
+
+```sh
+togler --bind "<Super>f" firefox
+```
+
+No need to re-add the app manually.
 
 ---
 
-### 2. Define Keyboard Shortcuts
+## 🧠 How It Works
 
-This is the real power of `togler`: launching or hiding apps with a single keypress.
+-   Uses `xdotool` to manage windows by class name
+-   Stores temporary toggle state in `/tmp/togler/<app>_state`
+-   Launches the app if it's not running
+-   Minimizes if focused, activates if not, cycles if multiple windows exist
+-   Designed for quick toggling with keyboard bindings
 
-You can assign keybindings to these one-liner scripts using your desktop environment’s shortcut settings.
+---
 
-#### For GNOME:
+## 📚 Examples
+
+```sh
+togler -t code                      # Toggle VS Code
+togler -a postman "Postman" "<Alt>p"  # Add shortcut for Postman
+togler -b "<Super>Return" terminal   # Bind Super+Enter to Terminal
+```
+
+---
+
+## 📎 Tip: Keyboard Shortcuts (GNOME)
 
 1. Open **Settings → Keyboard → Keyboard Shortcuts**
-2. Scroll down and click **"Custom Shortcuts"**
-3. Add a new shortcut:
+2. Scroll to **Custom Shortcuts**
+3. Click **+ Add Shortcut**
+4. Fill in:
 
-    - **Name:** Toggle Postman
-    - **Command:** `/home/youruser/.local/bin/toggle-postman.sh`
-    - **Shortcut:** `Alt + P` (or any other combination of your choice)
+    - **Name:** Toggle Firefox
+    - **Command:** `/home/youruser/.local/bin/toggle-firefox`
+    - **Shortcut:** `<Alt>f` or similar
 
-Refer to your desktop environment’s documentation if you're using KDE, XFCE, i3, etc.
-
----
-
-## License
-
-MIT — Feel free to copy, modify, distribute.
+Make sure `~/.local/bin` is in your `PATH`.
 
 ---
 
-Built with ❤️ by [Caesar](https://github.com/caesar003)
+## 🛑 Known Limitations
+
+-   Only works on **X11** (not Wayland)
+-   Depends on `xdotool` and GNOME’s `gsettings` for bindings
+-   Multiple windows are cycled, not tiled or stacked
+
+---
+
+## 🪪 License
+
+MIT — Free to use, modify, distribute.
+
+---
+
+Made with ❤️ by [Caesar](https://github.com/caesar003)
