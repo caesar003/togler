@@ -1,145 +1,146 @@
 # togler
 
-**Togler** (yes, not a typo) is a minimalist command-line tool to toggle the focus and visibility of GUI applications on X11 using `xdotool`.
+**Togler**: One key to show, one key to hide. No more ALT+TAB fatigue.
 
-Designed for speed and simplicity, it’s perfect for creating custom keyboard shortcuts that launch or hide your most-used apps.
+**Togler** (yes, not a typo) is a minimalist command-line tool that banishes ALT+TAB overload by letting you toggle apps with a single keypress. Never lose windows in tab-switching chaos again!
+
+Perfect for keyboard-centric workflows, it creates instant shortcuts to launch, focus, or hide your essential apps. Assign Super+F for Firefox, Super+T for Terminal, and never dig through windows again.
+
+---
+
+## 🚫✋ ALT+TAB Fatigue Solution
+
+Togler solves these common frustrations:
+- **Lost windows** in deep ALT+TAB stacks
+- **Constant window hunting** for frequently used apps
+- **Distracting context switches** when managing windows
+- **Mouse dependency** for window management
+
+Instead: **One dedicated key per app**. Press → show. Press again → hide.
 
 ---
 
 ## ✨ Features
 
--   Toggle app windows on/off screen with a single command
--   Cycle between multiple windows of the same app
--   Smart minimize if already focused
--   Automatically launch the app if not running
--   Interactive helpers for creating GNOME keybindings
--   Clean CLI interface: `--toggle`, `--add`, `--bind`, `--help`, `--version`
--   Zero config required. Just install and go.
--   Pure Bash. No dependencies besides `xdotool` and `gsettings`
+- **Single-key toggling** (press to show, press again to hide)
+- **App resurrection** - Launches apps if not running
+- **Smart minimization** - Hides focused apps instantly
+- **Window cycling** - Rotates through multiple instances
+- **Zero configuration** - Works immediately after install
+- **GNOME integration** - Simple shortcut creation
+- **Lightweight** - Pure Bash with minimal dependencies
+- **Interactive prompts** for missing arguments
+- **List all bindings** in one command
+- **Delete bindings** with confirmation
+- **Smarter fallback** logic if keybinding isn't found
 
 ---
 
 ## 🚀 Usage
 
 ```sh
-togler -t firefox          # Toggle Firefox
-togler -b "<Alt>f" code    # Bind Alt+F to toggle VS Code
-togler -a code             # Add GNOME shortcut for VS Code (interactive)
-togler -v                  # Show version
-togler -h                  # Show help
+togler -t firefox          # Toggle Firefox visibility
+togler -b "<Super>f" code  # Bind Super+F to VS Code
+togler -a slack            # Create shortcut for Slack (interactive)
+togler -l                  # List all Togler-managed shortcuts
+togler -d code             # Delete keybinding for VS Code
 ```
 
-### Options
+> 💡 **Pro Tip:** Togler is interactive — if you skip arguments, it will prompt you!
 
-| Option                           | Description                                                                 |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| `-t`, `--toggle <app>`           | Toggle the app’s window(s). Activate, cycle, minimize, or launch as needed  |
-| `-b`, `--bind [key] [app]`       | Bind a key to toggle an app. Prompts interactively if arguments are missing |
-| `-a`, `--add [app] [name] [key]` | Create GNOME shortcut. Prompts for any missing values interactively         |
-| `-v`, `--version`                | Show current version                                                        |
-| `-h`, `--help`                   | Show usage instructions                                                     |
+---
 
-> 💡 **Tip:** If you’re running `togler` from a terminal, it’ll remind you to assign it to a keyboard shortcut for smoother use.
+## 🧠 Why Togler?
+
+Traditional window switching:
+```mermaid
+graph LR
+    A[Working] --> B[Need App]
+    B --> C[Press ALT+TAB]
+    C --> D[Scan windows]
+    D --> E[Find correct app]
+    E --> F[Release keys]
+    F --> G[Continue working]
+```
+
+With Togler:
+```mermaid
+graph LR
+    A[Working] --> B[Need App]
+    B --> C[Press dedicated key]
+    C --> D[App appears]
+    D --> E[Continue working]
+```
 
 ---
 
 ## 📦 Installation
 
-Download the latest `.deb` from the [Releases](https://github.com/caesar003/togler/releases) page and install:
-
 ```sh
+# Install .deb package
 sudo dpkg -i togler*.deb
+
+# OR manual install
+cp togler ~/.local/bin/ && chmod +x ~/.local/bin/togler
 ```
 
-Or just copy the `togler` script to your `~/.local/bin` and make it executable.
+> ⚠️ Requires X11 (not Wayland) and `xdotool` (`sudo apt install xdotool`)
 
 ---
 
-## ⚙️ Requirements
+## 🖥️ Real-World Setup
 
--   X11 session (Wayland is **not** supported)
--   `xdotool` installed:
+1. **Create Firefox shortcut**:
+   ```sh
+   togler -a firefox "Toggle Firefox" "<Super>1"
+   ```
 
-    ```sh
-    sudo apt install xdotool
-    ```
+2. **Create Terminal shortcut**:
+   ```sh
+   togler -a terminal "Toggle Terminal" "<Super>2"
+   ```
 
----
-
-## 🔧 Post-Install Setup (Recommended)
-
-### 1. Use `--add` to Define Shortcuts
-
-```sh
-togler --add firefox "Toggle Firefox" "<Alt>f"
-```
-
-Or run `togler --add` alone and follow the prompts.
-
-This will:
-
--   Create a script in `~/.local/bin/toggle-firefox`
--   Add a GNOME keyboard shortcut bound to your chosen key
-
-### 2. Bind or Rebind Later with `--bind`
-
-Need to change the key later?
-
-```sh
-togler --bind "<Super>f" firefox
-```
-
-No need to re-add the app manually.
+3. **Enjoy workflow**:
+   - Press `Super+1` anytime → Firefox appears
+   - Press `Super+1` when focused → Firefox hides
+   - Press `Super+2` → Terminal toggles
+   - No window hunting, no distractions
 
 ---
 
-## 🧠 How It Works
+## 🛠️ Technical Notes
 
--   Uses `xdotool` to manage windows by class name
--   Stores temporary toggle state in `/tmp/togler/<app>_state`
--   Launches the app if it's not running
--   Minimizes if focused, activates if not, cycles if multiple windows exist
--   Designed for quick toggling with keyboard bindings
-
----
-
-## 📚 Examples
-
-```sh
-togler -t code                      # Toggle VS Code
-togler -a postman "Postman" "<Alt>p"  # Add shortcut for Postman
-togler -b "<Super>Return" terminal   # Bind Super+Enter to Terminal
-```
+- **State tracking**: Uses `/tmp/togler/<app>_state`
+- **Multiple windows**: Cycles through instances
+- **Activation logic**:
+  ```mermaid
+  graph TB
+    A[App running?] -->|No| B[Launch app]
+    A -->|Yes| C[Focused?]
+    C -->|Yes| D[Minimize]
+    C -->|No| E[Activate]
+  ```
+- **Keybinding storage**: GNOME `gsettings` system
 
 ---
 
-## 📎 Tip: Keyboard Shortcuts (GNOME)
+## 📚 Example Workflows
 
-1. Open **Settings → Keyboard → Keyboard Shortcuts**
-2. Scroll to **Custom Shortcuts**
-3. Click **+ Add Shortcut**
-4. Fill in:
+**Web Developer**:
+- `Super+1` Firefox
+- `Super+2` VS Code
+- `Super+3` Terminal
 
-    - **Name:** Toggle Firefox
-    - **Command:** `/home/youruser/.local/bin/toggle-firefox`
-    - **Shortcut:** `<Alt>f` or similar
+**Writer**:
+- `Super+1` LibreOffice
+- `Super+2` Research Browser
+- `Super+3` Notes
 
-Make sure `~/.local/bin` is in your `PATH`.
-
----
-
-## 🛑 Known Limitations
-
--   Only works on **X11** (not Wayland)
--   Depends on `xdotool` and GNOME’s `gsettings` for bindings
--   Multiple windows are cycled, not tiled or stacked
+**Sysadmin**:
+- `Super+1` Terminal
+- `Super+2` Monitoring
+- `Super+3` Documentation
 
 ---
 
-## 🪪 License
-
-MIT — Free to use, modify, distribute.
-
----
-
-Made with ❤️ by [Caesar](https://github.com/caesar003)
+Made with ❤️ by [Caesar](https://github.com/caesar003) · 🪪 MIT License

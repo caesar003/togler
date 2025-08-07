@@ -12,6 +12,12 @@ togler \- toggle application visibility using xdotool
 [\fB-a\fR [\fI<application-name>\fR] [\fI<shortcut-name>\fR] [\fI<key>\fR]]
 .br
 .B togler
+[\fB-d\fR [\fI<application-name>\fR]]
+.br
+.B togler
+[\fB-l\fR]
+.br
+.B togler
 [\fB-v\fR | \fB--version\fR]
 .br
 .B togler
@@ -26,8 +32,10 @@ Toggle focus/minimize state of app windows
 Bind key combinations to specific applications
 .IP \[bu]
 Create GNOME custom keybindings interactively or via arguments
+.IP \[bu]
+List or delete existing Togler-managed keybindings
 
-It provides minimal but powerful functionality for workflow optimization.
+It provides minimal but powerful functionality for workflow optimization. It is interactive when parameters are omitted, allowing it to work well in scripts or user-driven terminals.
 
 .SH OPTIONS
 .TP
@@ -39,6 +47,12 @@ Bind a custom key to toggle an application. If key or app name is missing, youâ€
 .TP
 .BR -a ", " --add " [<application-name>] [<shortcut-name>] [<key>]"
 Add a GNOME custom keybinding to toggle an app. Prompts for any missing arguments.
+.TP
+.BR -d ", " --delete " [<application-name>]"
+Delete a Togler-created GNOME keybinding for the given app. Prompts if app name is not provided. Includes a playful confirmation prompt.
+.TP
+.BR -l ", " --list
+List all Togler bindings currently managed by GNOME.
 .TP
 .BR -v ", " --version
 Show version and exit.
@@ -56,6 +70,12 @@ Bind Alt+F to toggle Firefox.
 .TP
 .B togler -a code "Toggle VSCode" "<Super>c"
 Create a GNOME shortcut to toggle VS Code with Super+C.
+.TP
+.B togler -l
+List all Togler-managed GNOME keybindings.
+.TP
+.B togler -d code
+Delete the keybinding for "code".
 
 .SH ENVIRONMENT
 This script depends on the following:
@@ -65,6 +85,9 @@ Used to interact with window states. Not compatible with Wayland.
 .TP
 .B gsettings
 Used to create and manage GNOME keybindings.
+.TP
+.B bash
+The script uses modern Bash syntax and helper functions.
 
 .SH SEE ALSO
 xdotool(1), gsettings(1)
@@ -74,4 +97,5 @@ Written by Caesar (https://github.com/caesar003)
 
 .SH BUGS
 Wayland is not supported. Togler works only in X11 sessions due to its use of xdotool.
-
+.P
+Use of interactive prompts may not be suitable for automated scripts unless parameters are fully supplied.
