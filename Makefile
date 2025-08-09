@@ -4,6 +4,7 @@ VERSION := $(shell cat VERSION)
 BUILD_DIR := build/togler_$(VERSION)_all
 BIN_DIR := $(BUILD_DIR)/usr/bin
 MAN_DIR := $(BUILD_DIR)/usr/share/man/man1
+COMPLETION_DIR := $(BUILD_DIR)/usr/share/bash-completion/completions
 
 all: $(BUILD_DIR).deb
 
@@ -13,9 +14,11 @@ prepare:
 	@echo "Creating build directories for version $(VERSION)..."
 	mkdir -p $(BIN_DIR)
 	mkdir -p $(BUILD_DIR)/usr/share/man/man1
+	mkdir -p $(COMPLETION_DIR)
 	cp -r DEBIAN $(BUILD_DIR)/
 	cp src/togler $(BIN_DIR)/togler
 	cp man/togler.1 $(MAN_DIR)/togler.1
+	cp completions/togler $(COMPLETION_DIR)/togler
 
 substitute:
 	@echo "Replacing version placeholders with $(VERSION)..."

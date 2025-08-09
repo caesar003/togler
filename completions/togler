@@ -1,0 +1,144 @@
+#!/bin/bash
+# Bash completion for togler
+
+_togler_completion() {
+	local cur prev opts
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD - 1]}"
+
+	# Main options
+	opts="-v --version -h --help -t --toggle -a --add -b --bind -l --list -d --delete"
+
+	# Handle completion based on the previous word
+	case "${prev}" in
+	togler)
+		# Complete main options
+		COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+		return 0
+		;;
+	-t | --toggle)
+		# Complete with common application names for toggle
+		local apps="code firefox gnome-terminal chromium nautilus gedit"
+		COMPREPLY=($(compgen -W "${apps}" -- ${cur}))
+		return 0
+		;;
+	-d | --delete)
+		# Complete with existing togler bindings for delete
+		_togler_complete_existing_apps
+		return 0
+		;;
+	-a | --add)
+		# Complete with common application names for add
+		local apps="code firefox gnome-terminal chromium nautilus gedit thunderbird discord slack teams"
+		COMPREPLY=($(compgen -W "${apps}" -- ${cur}))
+		return 0
+		;;
+	-b | --bind)
+		# For bind, we could complete with key combinations, but it's complex
+		# Just provide some common examples
+		if [[ ${cur} == "<"* ]]; then
+			local keys="<Alt> <Super> <Ctrl> <Shift>"
+			COMPREPLY=($(compgen -W "${keys}" -- ${cur}))
+		else
+			local common_keys="<Alt>f <Super>Return <Ctrl><Alt>t <Super>c"
+			COMPREPLY=($(compgen -W "${common_keys}" -- ${cur}))
+		fi
+		return 0
+		;;
+	esac
+
+	# Handle multi-word commands
+	case "${COMP_WORDS[1]}" in
+	-t | --toggle)
+		if [[ ${COMP_CWORD} -eq 2 ]]; then
+			# Second argument after toggle
+			local apps="code firefox gnome-terminal chromium nautilus gedit"
+			COMPREPLY=($(compgen -W "${apps}" -- ${cur}))
+		fi
+		;;
+	-a | --add)
+		case ${COMP_CWORD} in
+		2)
+			# App name for add
+			local apps="code firefox gnome-terminal chromium nautilus gedit thunderbird discord slack teams"
+			COMPREPLY=($(compgen -W "${apps}" -- ${cur}))
+			;;
+		3)
+			# Shortcut name - provide template
+			if [[ -n "${COMP_WORDS[2]}" ]]; then
+				local app="${COMP_WORDS[2]}"
+				COMPREPLY=("\"Toggle ${app^}\"")
+			fi
+			;;
+		4)
+			# Keybinding
+			local common_keys="<Alt>f <Super>Return <Ctrl><Alt>t <Super>c <Alt>Tab"
+			COMPREPLY=($(compgen -W "${common_keys}" -- ${cur}))
+			;;
+		esac
+		;;
+	-b | --bind)
+		case ${COMP_CWORD} in
+		2)
+			# Keybinding first
+			local common_keys="<Alt>f <Super>Return <Ctrl><Alt>t <Super>c"
+			COMPREPLY=($(compgen -W "${common_keys}" -- ${cur}))
+			;;
+		3)
+			# App name second
+			local apps="code firefox gnome-terminal chromium nautilus gedit"
+			COMPREPLY=($(compgen -W "${apps}" -- ${cur}))
+			;;
+		esac
+		;;
+	-d | --delete)
+		if [[ ${COMP_CWORD} -eq 2 ]]; then
+			# Complete with existing togler bindings
+			_togler_complete_existing_apps
+		fi
+		;;
+	esac
+
+	# Default completion
+	if [[ ${cur} == -* ]]; then
+		COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+	fi
+}
+
+# Helper function to complete with existing togler app bindings
+_togler_complete_existing_apps() {
+	local existing_apps=""
+
+	# Try to extract app names from existing togler bindings
+	if command -v gsettings >/dev/null 2>&1; then
+		local bindings=$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings 2>/dev/null)
+		if [[ -n "$bindings" && "$bindings" != "@as []" ]]; then
+			# Extract custom paths and check for togler commands
+			local paths=$(echo "$bindings" | grep -oP "'[^']+'" | sed "s/'//g")
+			for path in $paths; do
+				local command=$(gsettings get "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$path" command 2>/dev/null)
+				if [[ "$command" == *"togler --toggle"* ]]; then
+					# Extract app name from command
+					local app=$(echo "$command" | sed "s/.*togler --toggle //; s/'//g")
+					existing_apps="$existing_apps $app"
+				elif [[ "$command" == *"toggle-"* ]]; then
+					# Extract app name from toggle- format
+					local app=$(echo "$command" | sed "s/.*toggle-//; s/'//g")
+					existing_apps="$existing_apps $app"
+				fi
+			done
+		fi
+	fi
+
+	# If we found existing apps, use them; otherwise fall back to common apps
+	if [[ -n "$existing_apps" ]]; then
+		COMPREPLY=($(compgen -W "${existing_apps}" -- ${cur}))
+	else
+		local common_apps="code firefox gnome-terminal chromium nautilus gedit"
+		COMPREPLY=($(compgen -W "${common_apps}" -- ${cur}))
+	fi
+}
+
+# Register the completion function
+complete -F _togler_completion togler

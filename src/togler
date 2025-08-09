@@ -12,6 +12,45 @@ log_success() { echo "✅ $1"; }
 log_error() { echo "❌ Error: $1"; }
 log_warning() { echo "⚠️  Warning: $1"; }
 
+# Application-specific mappings for process names and window classes
+get_process_pattern() {
+	local app="$1"
+	case "$app" in
+		"gnome-terminal")
+			echo "gnome-terminal-server"
+			;;
+		"code")
+			echo "code"
+			;;
+		"firefox")
+			echo "firefox"
+			;;
+		*)
+			echo "$app"
+			;;
+	esac
+}
+
+get_window_class() {
+	local app="$1"
+	case "$app" in
+		"gnome-terminal")
+			echo "Gnome-terminal"
+			;;
+		"code")
+			echo "Code"
+			;;
+		"firefox")
+			echo "Firefox"
+			;;
+		*)
+			echo "$app"
+			;;
+	esac
+}
+
+
+
 # Prompt user for input with validation
 prompt_required() {
 	local prompt="$1"
@@ -337,11 +376,15 @@ toggle() {
 
 	require_command "xdotool" "Install it with: sudo apt install -y xdotool"
 
-	if pgrep -x "$APP_NAME" >/dev/null; then
+	local process_pattern=$(get_process_pattern "$APP_NAME")
+	local window_class=$(get_window_class "$APP_NAME")
+
+	if pgrep -f "$process_pattern" >/dev/null; then
 		active_win_id=$(xdotool getactivewindow 2>/dev/null)
 		app_win_ids=$(xdotool search --onlyvisible --class "$APP_NAME" | sort -n)
 
 		if [ -z "$app_win_ids" ]; then
+			"$APP_NAME" &
 			exit 0
 		fi
 
