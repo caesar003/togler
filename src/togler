@@ -9,36 +9,36 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Check if we're in development or production environment
 if [[ "$SCRIPT_DIR" == */usr/bin ]]; then
-    # Production environment: libraries are in /usr/lib/togler/
-    LIB_DIR="/usr/lib/togler"
+	# Production environment: libraries are in /usr/lib/togler/
+	LIB_DIR="/usr/lib/togler"
 elif [[ -f "$SCRIPT_DIR/lib/helper.sh" ]]; then
-    # Development environment: libraries are relative to script
-    LIB_DIR="$SCRIPT_DIR/lib"
+	# Development environment: libraries are relative to script
+	LIB_DIR="$SCRIPT_DIR/lib"
 elif [[ -f "$SCRIPT_DIR/../lib/helper.sh" ]]; then
-    # Alternative development structure: libraries are one level up
-    LIB_DIR="$SCRIPT_DIR/../lib"
+	# Alternative development structure: libraries are one level up
+	LIB_DIR="$SCRIPT_DIR/../lib"
 else
-    echo "❌ Error: Could not locate togler libraries"
-    echo "Expected to find libraries in one of:"
-    echo "  - $SCRIPT_DIR/lib/"
-    echo "  - $SCRIPT_DIR/../lib/"
-    echo "  - /usr/lib/togler/"
-    exit 1
+	echo "❌ Error: Could not locate togler libraries"
+	echo "Expected to find libraries in one of:"
+	echo "  - $SCRIPT_DIR/lib/"
+	echo "  - $SCRIPT_DIR/../lib/"
+	echo "  - /usr/lib/togler/"
+	exit 1
 fi
 # }}}
 
 # {{{ Module sourcing
 # Source required modules in dependency order
 source_module() {
-    local module="$1"
-    local module_path="$LIB_DIR/$module"
-    
-    if [[ -f "$module_path" ]]; then
-        source "$module_path"
-    else
-        echo "❌ Error: Required module '$module' not found at $module_path"
-        exit 1
-    fi
+	local module="$1"
+	local module_path="$LIB_DIR/$module"
+
+	if [[ -f "$module_path" ]]; then
+		source "$module_path"
+	else
+		echo "❌ Error: Required module '$module' not found at $module_path"
+		exit 1
+	fi
 }
 
 # Load modules in order (helper first, as others depend on it)
