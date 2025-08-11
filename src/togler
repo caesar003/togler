@@ -2,10 +2,8 @@
 
 VERSION="__VERSION__"
 
-# ---------------------------
-# Dynamic Library Loading
-# ---------------------------
-
+# {{{ Dynamic Library Loading
+# {{{ Determine library path
 # Determine the script directory and library paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -27,7 +25,9 @@ else
     echo "  - /usr/lib/togler/"
     exit 1
 fi
+# }}}
 
+# {{{ Module sourcing
 # Source required modules in dependency order
 source_module() {
     local module="$1"
@@ -45,11 +45,10 @@ source_module() {
 source_module "helper.sh"
 source_module "config.sh"
 source_module "core.sh"
+# }}}
+# }}}
 
-# ---------------------------
-# Entry point
-# ---------------------------
-
+# {{{ Entry point
 case "$1" in
 -v | --version)
 	print_version
@@ -81,3 +80,4 @@ case "$1" in
 	print_help
 	;;
 esac
+# }}}

@@ -11,6 +11,7 @@ Perfect for keyboard-centric workflows, it creates instant shortcuts to launch, 
 ## 🚫✋ ALT+TAB Fatigue Solution
 
 Togler solves these common frustrations:
+
 - **Lost windows** in deep ALT+TAB stacks
 - **Constant window hunting** for frequently used apps
 - **Distracting context switches** when managing windows
@@ -53,6 +54,7 @@ togler -d code             # Delete keybinding for VS Code
 ## 🧠 Why Togler?
 
 Traditional window switching:
+
 ```mermaid
 graph LR
     A[Working] --> B[Need App]
@@ -64,6 +66,7 @@ graph LR
 ```
 
 With Togler:
+
 ```mermaid
 graph LR
     A[Working] --> B[Need App]
@@ -91,11 +94,13 @@ cp togler ~/.local/bin/ && chmod +x ~/.local/bin/togler
 ## 🖥️ Real-World Setup
 
 1. **Create Firefox shortcut**:
+
    ```sh
    togler -a firefox "Toggle Firefox" "<Super>1"
    ```
 
 2. **Create Terminal shortcut**:
+
    ```sh
    togler -a terminal "Toggle Terminal" "<Super>2"
    ```
@@ -113,6 +118,7 @@ cp togler ~/.local/bin/ && chmod +x ~/.local/bin/togler
 - **State tracking**: Uses `/tmp/togler/<app>_state`
 - **Multiple windows**: Cycles through instances
 - **Activation logic**:
+
   ```mermaid
   graph TB
     A[App running?] -->|No| B[Launch app]
@@ -120,6 +126,7 @@ cp togler ~/.local/bin/ && chmod +x ~/.local/bin/togler
     C -->|Yes| D[Minimize]
     C -->|No| E[Activate]
   ```
+
 - **Keybinding storage**: GNOME `gsettings` system
 
 ---
@@ -127,16 +134,19 @@ cp togler ~/.local/bin/ && chmod +x ~/.local/bin/togler
 ## 📚 Example Workflows
 
 **Web Developer**:
+
 - `Super+1` Firefox
 - `Super+2` VS Code
 - `Super+3` Terminal
 
 **Writer**:
+
 - `Super+1` LibreOffice
 - `Super+2` Research Browser
 - `Super+3` Notes
 
 **Sysadmin**:
+
 - `Super+1` Terminal
 - `Super+2` Monitoring
 - `Super+3` Documentation
