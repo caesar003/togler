@@ -1,0 +1,7 @@
+{
+  "uuid": "togler@local",
+  "name": "Togler D-Bus",
+  "description": "Expose a small D-Bus API to toggle windows by WM_CLASS for Togler (no UI).",
+  "shell-version": ["42", "43", "44", "45", "46", "47", "48", "49", "50"],
+  "version": "__VERSION__"
+}
