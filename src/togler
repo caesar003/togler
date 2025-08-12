@@ -76,6 +76,14 @@ case "$1" in
 -d | --delete)
 	delete_binding "$2"
 	;;
+--setup-wayland)
+	if is_wayland; then
+		setup_wayland_extension
+	else
+		log_warning "Not running on Wayland. Extension setup not needed for X11."
+		echo "Current session type: ${XDG_SESSION_TYPE:-unknown}"
+	fi
+	;;
 *)
 	print_help
 	;;
