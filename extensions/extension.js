@@ -32,7 +32,10 @@ export default class ToglerExtension {
       const windows = actors.map(a => a.get_meta_window()).filter(Boolean);
       const matches = windows.filter(w => w.get_wm_class() === wmclass);
 
-      if (!matches.length) return false;
+      if (!matches.length) {
+        Gio.AppInfo.create_from_commandline(app_cmd).launch();
+        return true;
+      }
 
       const now = global.get_current_time();
       const focused = global.display.focus_window;
