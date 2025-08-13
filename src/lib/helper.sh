@@ -91,10 +91,12 @@ get_process_pattern() {
 get_window_class() {
 	local app="$1"
 	case "$app" in
-	"gnome-terminal") echo "Gnome-terminal" ;;
+	"gnome-terminal") echo "gnome-terminal-server" ;;
 	"code") echo "Code" ;;
-	"firefox") echo "Firefox" ;;
+	"firefox") echo "firefox_firefox" ;;
+	"postman") echo "Postman" ;;
 	"slack") echo "Slack" ;;
+	"chrome") echo "google-chrome" ;;
 	*) echo "$app" ;;
 	esac
 }
