@@ -1,5 +1,7 @@
 # togler
 
+<video src="togler.mp4" controls></video>
+
 **Togler**: One key to show, one key to hide. No more ALT+TAB fatigue.
 
 **Togler** (yes, not a typo) is a minimalist command-line tool that banishes ALT+TAB overload by letting you toggle apps with a single keypress. Never lose windows in tab-switching chaos again!
