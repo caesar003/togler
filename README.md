@@ -1,6 +1,6 @@
 # togler
 
-<video src="togler.mp4" controls></video>
+[![preview](thumbnail.jpg)](https://dl.dropboxusercontent.com/scl/fi/4f6xqioollzuea6jm3hvf/togler.mp4?rlkey=t151ubsen9ns3to5zctb0ta4h&st=1ws8lrb5&dl=0)
 
 **Togler**: One key to show, one key to hide. No more ALT+TAB fatigue.
 
