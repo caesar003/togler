@@ -366,22 +366,51 @@ setup_wayland_extension() {
     return 1
   fi
 
-  # Check if extension is already installed
+  # Check if extension is already installed and up-to-date
   if is_extension_installed; then
-    log_info "Extension already installed"
-    enable_extension
-    return 0
+    local installed_version=$(get_installed_extension_version)
+    local current_version="$VERSION"
+
+    if [[ "$installed_version" == "$current_version" ]]; then
+      log_info "Extension already installed and up-to-date (v$installed_version)"
+      enable_extension
+      return 0
+    else
+      log_info "Extension version mismatch: installed v$installed_version, current v$current_version"
+      log_info "Updating extension..."
+      # Continue to installation/update below
+    fi
+  else
+    log_info "Installing GNOME Shell extension for Wayland support..."
   fi
 
-  log_info "Installing GNOME Shell extension for Wayland support..."
-
-  # Install extension
+  # Install/update extension
   if install_extension "$extension_source"; then
     enable_extension
+    if [[ -n "$installed_version" ]]; then
+      log_info "Extension updated from v$installed_version to v$current_version"
+    else
+      log_info "Extension installed (v$current_version)"
+    fi
     log_warning "Please log out and log back in, or restart GNOME Shell (Alt+F2, 'r', Enter) to activate the extension"
     return 0
   else
     return 1
+  fi
+}
+
+# Helper function to get the installed extension version
+get_installed_extension_version() {
+  local extension_path="$HOME/.local/share/gnome-shell/extensions/togler@local"
+  local metadata_file="$extension_path/metadata.json"
+
+  if [[ -f "$metadata_file" ]]; then
+    # Extract version from metadata.json using grep/sed
+    # This handles the case where version might be a string or number
+    local version=$(grep '"version"' "$metadata_file" | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\?\([^",]*\)"\?.*/\1/')
+    echo "$version"
+  else
+    echo "unknown"
   fi
 }
 
