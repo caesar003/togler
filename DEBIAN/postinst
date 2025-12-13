@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e
+
+EXTENSION_UUID="togler@local"
+EXTENSION_DIR="/usr/share/gnome-shell/extensions/$EXTENSION_UUID"
+
+echo "Installing Togler..."
+
+# Update man database
+if command -v mandb > /dev/null 2>&1; then
+    echo "Updating man database..."
+    mandb -q || true
+fi
+
+# Verify extension was installed
+if [ -d "$EXTENSION_DIR" ]; then
+    echo "✓ GNOME Shell extension installed to: $EXTENSION_DIR"
+    
+    # Compile schema if it exists
+    if [ -f "$EXTENSION_DIR/schemas/gschemas.compiled" ]; then
+        echo "Compiling extension schemas..."
+        glib-compile-schemas "$EXTENSION_DIR/schemas/" || true
+    fi
+else
+    echo "⚠ Warning: Extension directory not found at $EXTENSION_DIR"
+fi
+
+# Try to enable for current user if running via sudo
+if [ -n "$SUDO_USER" ]; then
+    USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+    echo ""
+    echo "Attempting to enable extension for user: $SUDO_USER"
+    
+    # Use sudo to run as the actual user
+    sudo -u "$SUDO_USER" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $SUDO_USER)/bus" \
+        gnome-extensions enable "$EXTENSION_UUID" 2>/dev/null && \
+        echo "✓ Extension enabled for $SUDO_USER" || \
+        echo "⚠ Could not auto-enable. Please run: gnome-extensions enable $EXTENSION_UUID"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Togler installation complete!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Next steps:"
+echo "  1. Log out and log back in (or restart GNOME Shell on X11 with Alt+F2 → r)"
+echo "  2. Enable the extension:"
+echo "     gnome-extensions enable $EXTENSION_UUID"
+echo "  3. Restart your terminal for bash completion"
+echo "  4. Run 'togler --help' for usage"
+echo ""
+
+exit 0

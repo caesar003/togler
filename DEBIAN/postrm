@@ -1,0 +1,58 @@
+#!/bin/bash
+set -e
+
+EXTENSION_UUID="togler@local"
+
+case "$1" in
+    remove|purge)
+        echo "Removing Togler..."
+        
+        # Disable extension for all users who have it enabled
+        for user_home in /home/*; do
+            if [ -d "$user_home" ]; then
+                username=$(basename "$user_home")
+                echo "Disabling extension for user: $username"
+                sudo -u "$username" gnome-extensions disable "$EXTENSION_UUID" 2>/dev/null || true
+            fi
+        done
+        
+        # Update man database
+        if command -v mandb > /dev/null 2>&1; then
+            echo "Updating man database..."
+            mandb -q || true
+        fi
+        
+        # If purge, remove user configurations
+        if [ "$1" = "purge" ]; then
+            echo "Purging user configurations..."
+            for user_home in /home/*; do
+                config_dir="$user_home/.config/togler"
+                if [ -d "$config_dir" ]; then
+                    echo "Removing config: $config_dir"
+                    rm -rf "$config_dir"
+                fi
+            done
+        fi
+        
+        echo "Togler removed successfully."
+        
+        # Reload GNOME Shell (only works on X11)
+        if [ "$XDG_SESSION_TYPE" = "x11" ]; then
+            echo "Reloading GNOME Shell..."
+            busctl --user call org.gnome.Shell /org/gnome/Shell org.gnome.Shell Eval s 'Meta.restart("Restarting…")' 2>/dev/null || true
+        else
+            echo "Note: On Wayland, log out and log back in to complete removal."
+        fi
+        ;;
+    
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        # Do nothing for these cases
+        ;;
+    
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

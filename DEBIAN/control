@@ -1,11 +1,22 @@
 Package: togler
-Version: 0.0.0
+Version: __VERSION__
 Section: utils
 Priority: optional
-Maintainer: caesar <caesarmuksid@gmail.com>
-Build-Depends: debhelper (>= 11)
 Architecture: all
-Depends: xdotool
-Description: Togler: toggle focus and visibility of X11 apps
- A small CLI utility to focus or minimize a running X11 application using xdotool.
-
+Depends: gnome-shell (>= 42), libglib2.0-bin
+Maintainer: Caesar <https://github.com/caesar003>
+Homepage: https://github.com/caesar003/togler
+Description: Toggle application visibility on GNOME
+ Togler is a command-line utility for toggling application window
+ visibility on GNOME desktop environments. It provides a simple interface
+ to show, hide, or launch applications with a single command.
+ .
+ Key features:
+  * Toggle windows between visible and minimized states
+  * Launch applications if not already running
+  * Support for both Wayland and X11 sessions
+  * Configurable WM_CLASS mappings for different applications
+  * Bash completion support
+ .
+ Togler requires the companion GNOME Shell extension to be installed
+ and enabled for full functionality.

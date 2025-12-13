@@ -1,91 +1,175 @@
 #!/bin/bash
 
 VERSION="__VERSION__"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/togler"
+CONFIG_FILE="$CONFIG_DIR/apps.conf"
 
-# {{{ Dynamic Library Loading
-# {{{ Determine library path
-# Determine the script directory and library paths
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Check if we're in development or production environment
-if [[ "$SCRIPT_DIR" == */usr/bin ]]; then
-	# Production environment: libraries are in /usr/lib/togler/
-	LIB_DIR="/usr/lib/togler"
-elif [[ -f "$SCRIPT_DIR/lib/helper.sh" ]]; then
-	# Development environment: libraries are relative to script
-	LIB_DIR="$SCRIPT_DIR/lib"
-elif [[ -f "$SCRIPT_DIR/../lib/helper.sh" ]]; then
-	# Alternative development structure: libraries are one level up
-	LIB_DIR="$SCRIPT_DIR/../lib"
-else
-	echo "❌ Error: Could not locate togler libraries"
-	echo "Expected to find libraries in one of:"
-	echo "  - $SCRIPT_DIR/lib/"
-	echo "  - $SCRIPT_DIR/../lib/"
-	echo "  - /usr/lib/togler/"
-	exit 1
-fi
-# }}}
-
-# {{{ Module sourcing
-# Source required modules in dependency order
-source_module() {
-	local module="$1"
-	local module_path="$LIB_DIR/$module"
-
-	if [[ -f "$module_path" ]]; then
-		source "$module_path"
-	else
-		echo "❌ Error: Required module '$module' not found at $module_path"
-		exit 1
-	fi
+is_wayland() {
+    [ "$XDG_SESSION_TYPE" = "wayland" ]
 }
 
-# Load modules in order (helper first, as others depend on it)
-source_module "helper.sh"
-source_module "config.sh"
-source_module "core.sh"
-# }}}
-# }}}
+# Initialize config directory and default config file
+init_config() {
+    if [ ! -d "$CONFIG_DIR" ]; then
+        mkdir -p "$CONFIG_DIR"
+    fi
+    
+    if [ ! -f "$CONFIG_FILE" ]; then
+        cat > "$CONFIG_FILE" << 'EOF'
+# Togler Application Configuration
+# Format: app_name|wayland_class|x11_class|launch_command
+#
+# Examples:
+chrome|google-chrome|Google-chrome|google-chrome
+firefox|firefox_firefox|firefox_firefox|firefox
+kitty|kitty|kitty|kitty
+postman|Postman|Postman|postman
+nautilus|org.gnome.Nautilus|org.gnome.Nautilus|nautilus
+slack|Slack|Slack|slack
+vscode|Code|Code|code
+terminal|gnome-terminal-server|Gnome-terminal|gnome-terminal
+EOF
+        echo "Created default config at: $CONFIG_FILE"
+    fi
+}
 
-# {{{ Entry point
+# Get WM_CLASS and launch command from config
+get_app_config() {
+    local app_name="$1"
+    local session_type="$XDG_SESSION_TYPE"
+    
+    # Initialize config if needed
+    init_config
+    
+    # Try to find app in config file (ignore comments and empty lines)
+    local config_line=$(grep -v "^#" "$CONFIG_FILE" | grep -v "^$" | grep "^${app_name}|")
+    
+    if [ -n "$config_line" ]; then
+        IFS='|' read -r name wayland_class x11_class launch_cmd <<< "$config_line"
+        
+        if [ "$session_type" = "wayland" ]; then
+            echo "${wayland_class}|${launch_cmd}"
+        else
+            echo "${x11_class}|${launch_cmd}"
+        fi
+    else
+        # App not in config, return as-is
+        echo "${app_name}|${app_name}"
+    fi
+}
+
+toggle() {
+    if [ -z "$1" ]; then
+        echo "Usage: togler -t <app_name> [launch_command]"
+        echo "       togler --toggle <app_name> [launch_command]"
+        echo ""
+        echo "Examples:"
+        echo "  togler -t chrome"
+        echo "  togler -t kitty"
+        echo "  togler -t myapp /usr/bin/myapp"
+        echo ""
+        echo "Configure apps in: $CONFIG_FILE"
+        exit 1
+    fi
+
+    local app_name="$1"
+    local override_cmd="$2"
+    
+    # Get config for this app
+    local config=$(get_app_config "$app_name")
+    IFS='|' read -r wm_class launch_cmd <<< "$config"
+    
+    # Allow command line override
+    if [ -n "$override_cmd" ]; then
+        launch_cmd="$override_cmd"
+    fi
+
+    # Try to toggle the window
+    RESULT=$(gdbus call --session \
+        --dest org.gnome.Shell \
+        --object-path /org/gnome/Shell/Extensions/Togler \
+        --method org.gnome.Shell.Extensions.Togler.ToggleByWmClass \
+        "$wm_class" 2>/dev/null)
+
+    # If window not found (false), launch the app
+    if [[ "$RESULT" == "(false,)" ]]; then
+        $launch_cmd &
+    fi
+}
+
+list_apps() {
+    init_config
+    echo "Configured applications:"
+    echo ""
+    printf "%-15s %-25s %-25s %s\n" "APP NAME" "WAYLAND CLASS" "X11 CLASS" "COMMAND"
+    echo "--------------------------------------------------------------------------------"
+    grep -v "^#" "$CONFIG_FILE" | grep -v "^$" | while IFS='|' read -r name wayland x11 cmd; do
+        printf "%-15s %-25s %-25s %s\n" "$name" "$wayland" "$x11" "$cmd"
+    done
+}
+
+edit_config() {
+    init_config
+    ${EDITOR:-nano} "$CONFIG_FILE"
+}
+
+print_version() {
+    echo "Togler version $VERSION"
+}
+
+print_help() {
+    cat << EOF
+Togler - Toggle application visibility on GNOME
+
+Usage:
+  togler -t|--toggle <app_name> [launch_command]
+  togler -l|--list
+  togler -e|--edit
+  togler -v|--version
+  togler -h|--help
+
+Options:
+  -t, --toggle <app>    Toggle the specified application
+  -l, --list            List all configured applications
+  -e, --edit            Edit the configuration file
+  -v, --version         Show version information
+  -h, --help            Show this help message
+
+Examples:
+  togler -t chrome              Toggle Chrome window
+  togler -t terminal            Toggle GNOME Terminal
+  togler -t kitty               Toggle Kitty terminal
+  togler -t myapp /path/to/app  Toggle with custom launch command
+
+Configuration:
+  Config file: $CONFIG_FILE
+  
+  Add custom applications by editing the config file with:
+    togler --edit
+
+For more information, see: man togler
+EOF
+}
+
 case "$1" in
--v | --version)
-	print_version
-	;;
--h | --help)
-	print_help
-	;;
--t | --toggle)
-	APP_NAME="$2"
-	if [ -z "$APP_NAME" ]; then
-		log_error "Application name required for --toggle"
-		exit 1
-	fi
-	toggle
-	;;
--a | --add)
-	add_app "$2" "$3" "$4"
-	;;
--b | --bind)
-	bind_key "$2" "$3"
-	;;
--l | --list)
-	list_bindings
-	;;
--d | --delete)
-	delete_binding "$2"
-	;;
---setup-wayland)
-	if is_wayland; then
-		setup_wayland_extension
-	else
-		log_warning "Not running on Wayland. Extension setup not needed for X11."
-		echo "Current session type: ${XDG_SESSION_TYPE:-unknown}"
-	fi
-	;;
-*)
-	print_help
-	;;
+    -v|--version|v)
+        print_version
+        ;;
+    -t|--toggle)
+        toggle "$2" "$3"
+        ;;
+    -l|--list)
+        list_apps
+        ;;
+    -e|--edit)
+        edit_config
+        ;;
+    -h|--help|help|"")
+        print_help
+        ;;
+    *)
+        echo "Unknown option: $1"
+        echo "Run 'togler --help' for usage information"
+        exit 1
+        ;;
 esac
-# }}}

@@ -1,262 +1,256 @@
-# togler
+# Togler
 
-[![preview](thumbnail.jpg)](https://dl.dropboxusercontent.com/scl/fi/4f6xqioollzuea6jm3hvf/togler.mp4?rlkey=t151ubsen9ns3to5zctb0ta4h&st=1ws8lrb5&dl=0)
+A command-line utility for toggling application window visibility on GNOME desktop environments.
 
-**Togler**: One key to show, one key to hide. No more ALT+TAB fatigue.
+## Features
 
-**Togler** (yes, not a typo) is a minimalist command-line tool that banishes ALT+TAB overload by letting you toggle apps with a single keypress. Never lose windows in tab-switching chaos again!
+- 🪟 **Toggle windows** - Show/hide application windows with a single command
+- 🚀 **Auto-launch** - Automatically launch applications if not running
+- 🔄 **Wayland & X11** - Full support for both display servers
+- ⚙️ **Configurable** - Easy configuration for custom applications
+- 📝 **Bash completion** - Tab completion for configured apps
+- 🎯 **Smart behavior** - Minimize focused windows, activate unfocused ones
 
-Perfect for keyboard-centric workflows, it creates instant shortcuts to launch, focus, or hide your essential apps. Assign Super+F for Firefox, Super+T for Terminal, and never dig through windows again.
+## Requirements
 
-**Now with full Wayland support!** 🎉
+- GNOME Shell (version 42+)
+- GLib D-Bus tools (`glib2.0-bin`)
+- Bash
 
----
+## Installation
 
-## 🚫✋ ALT+TAB Fatigue Solution
+### From .deb Package (Recommended)
 
-Togler solves these common frustrations:
+1. Download or build the package:
+   ```bash
+   ./build.sh
+   ```
 
--   **Lost windows** in deep ALT+TAB stacks
--   **Constant window hunting** for frequently used apps
--   **Distracting context switches** when managing windows
--   **Mouse dependency** for window management
+2. Install the package:
+   ```bash
+   sudo apt install ./build/togler_0.0.1_all.deb
+   ```
 
-Instead: **One dedicated key per app**. Press → show. Press again → hide.
+3. Enable the GNOME Shell extension:
+   ```bash
+   gnome-extensions enable togler@local
+   ```
 
----
+4. Restart your terminal or source bash completion:
+   ```bash
+   source /etc/bash_completion.d/togler
+   ```
 
-## ✨ Features
+### Manual Installation
 
--   **Single-key toggling** (press to show, press again to hide)
--   **App resurrection** - Launches apps if not running
--   **Smart minimization** - Hides focused apps instantly
--   **Window cycling** - Rotates through multiple instances
--   **Zero configuration** - Works immediately after install
--   **GNOME integration** - Simple shortcut creation
--   **Full Wayland support** - Automatic extension setup
--   **X11 compatible** - Traditional xdotool integration
--   **Lightweight** - Pure Bash with minimal dependencies
--   **Interactive prompts** for missing arguments
--   **List all bindings** in one command
--   **Delete bindings** with confirmation
--   **Cross-session compatibility** - Works on both X11 and Wayland
-
----
-
-## 🖥️ Platform Support
-
-| Session Type | Technology            | Status             | Setup Required                 |
-| ------------ | --------------------- | ------------------ | ------------------------------ |
-| **X11**      | xdotool               | ✅ Fully supported | `sudo apt install xdotool`     |
-| **Wayland**  | GNOME Shell Extension | ✅ Fully supported | 🔧 Auto-installed on first use |
-
-> 🎯 **Wayland Magic**: Togler automatically detects Wayland and installs a lightweight GNOME Shell extension. No manual setup required!
-
----
-
-## 🚀 Usage
-
-```sh
-togler -t firefox          # Toggle Firefox visibility
-togler -b "<Super>f" code  # Bind Super+F to VS Code
-togler -a slack            # Create shortcut for Slack (interactive)
-togler -l                  # List all Togler-managed shortcuts
-togler -d code             # Delete keybinding for VS Code
-togler --setup-wayland     # Manually setup Wayland support
+```bash
+sudo make install
+gnome-extensions enable togler@local
 ```
 
-> 💡 **Pro Tip:** Togler is interactive — if you skip arguments, it will prompt you!
+## Usage
 
----
+### Basic Commands
 
-## 🧠 Why Togler?
+```bash
+# Toggle an application
+togler -t chrome
 
-Traditional window switching:
+# Toggle with custom launch command
+togler -t myapp /path/to/myapp
 
-```mermaid
-graph LR
-    A[Working] --> B[Need App]
-    B --> C[Press ALT+TAB]
-    C --> D[Scan windows]
-    D --> E[Find correct app]
-    E --> F[Release keys]
-    F --> G[Continue working]
+# List configured applications
+togler -l
+
+# Edit configuration
+togler -e
+
+# Show help
+togler -h
+
+# Show version
+togler -v
 ```
 
-With Togler:
+### Configuration
 
-```mermaid
-graph LR
-    A[Working] --> B[Need App]
-    B --> C[Press dedicated key]
-    C --> D[App appears]
-    D --> E[Continue working]
+Togler uses a configuration file at `~/.config/togler/apps.conf` to map application names to their WM_CLASS values for both Wayland and X11.
+
+#### Configuration Format
+
+```
+app_name|wayland_class|x11_class|launch_command
 ```
 
----
+#### Example Configuration
 
-## 📦 Installation
-
-```sh
-# Install .deb package
-sudo dpkg -i togler*.deb
-
-# OR manual install
-cp togler ~/.local/bin/ && chmod +x ~/.local/bin/togler
+```
+chrome|google-chrome|Google-chrome|google-chrome
+firefox|firefox_firefox|firefox_firefox|firefox
+kitty|kitty|kitty|kitty
+terminal|gnome-terminal-server|Gnome-terminal|gnome-terminal
+vscode|Code|Code|code
 ```
 
-### System Requirements
+#### Adding Custom Applications
 
-**For X11 (traditional):**
+1. Edit the configuration:
+   ```bash
+   togler -e
+   ```
 
--   `xdotool` package: `sudo apt install xdotool`
--   `gsettings` (usually pre-installed)
+2. Add your application in the format shown above
 
-**For Wayland:**
+3. Save and exit
 
--   GNOME Shell (extension auto-installed)
--   `gsettings` (usually pre-installed)
--   No additional packages needed!
+#### Finding WM_CLASS Values
 
----
-
-## 🌊 Wayland Setup
-
-Togler automatically handles Wayland setup:
-
-1. **First run detection**: Togler detects Wayland session
-2. **Auto-extension install**: Installs GNOME Shell extension to `~/.local/share/gnome-shell/extensions/`
-3. **Auto-enable**: Activates the extension automatically
-4. **Ready to use**: All functionality works seamlessly
-
-If setup fails, manually restart GNOME Shell:
-
--   Press `Alt+F2`, type `r`, press `Enter`
--   Or log out and back in
-
-```sh
-# Manual Wayland setup (if needed)
-togler --setup-wayland
+**On X11:**
+```bash
+xprop WM_CLASS
+# Click on the window
 ```
 
----
+**On Wayland:**
+- Open GNOME Looking Glass: `Alt+F2`, type `lg`, press Enter
+- Navigate to the "Windows" tab
+- Find your window and check the `wm_class` property
 
-## 🖥️ Real-World Setup
+## Building from Source
 
-1. **Create Firefox shortcut**:
+### Build Requirements
 
-    ```sh
-    togler -a firefox "Toggle Firefox" "<Super>1"
-    ```
+- `dpkg-deb`
+- `gzip`
+- `make`
 
-2. **Create Terminal shortcut**:
+### Build Instructions
 
-    ```sh
-    togler -a terminal "Toggle Terminal" "<Super>2"
-    ```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/caesar003/togler.git
+   cd togler
+   ```
 
-3. **Enjoy workflow**:
-    - Press `Super+1` anytime → Firefox appears
-    - Press `Super+1` when focused → Firefox hides
-    - Press `Super+2` → Terminal toggles
-    - Works identically on X11 and Wayland!
+2. Build the package:
+   ```bash
+   ./build.sh
+   ```
 
----
+3. The `.deb` package will be created in the `build/` directory
 
-## 🛠️ Technical Architecture
+### Makefile Targets
 
-**Cross-Platform Design**:
-
-```mermaid
-graph TB
-    A[togler command] --> B{Session Type?}
-    B -->|X11| C[xdotool integration]
-    B -->|Wayland| D[GNOME Shell Extension]
-    C --> E[Window Management]
-    D --> E
-    E --> F[App Toggle Result]
+```bash
+make deb        # Build Debian package
+make build      # Prepare build directory
+make install    # Install directly to system (requires sudo)
+make uninstall  # Uninstall from system (requires sudo)
+make clean      # Clean build artifacts
+make help       # Show help
 ```
 
-**State Management**:
+## How It Works
 
--   **State tracking**: Uses `/tmp/togler/<app>_state`
--   **Multiple windows**: Cycles through instances
--   **Session detection**: Automatic X11/Wayland detection
--   **Extension management**: Auto-install, enable, and cleanup
+Togler consists of two components:
 
-**Activation Logic**:
+1. **Command-line tool** - The `togler` script that users interact with
+2. **GNOME Shell extension** - Provides a D-Bus interface for window manipulation
 
-```mermaid
-graph TB
-    A[App running?] -->|No| B[Launch app]
-    A -->|Yes| C[Focused?]
-    C -->|Yes| D[Minimize]
-    C -->|No| E[Activate]
+When you run `togler -t <app>`:
+1. The script looks up the WM_CLASS for your session type (Wayland/X11)
+2. It sends a D-Bus message to the GNOME Shell extension
+3. The extension searches for windows with matching WM_CLASS
+4. If found and focused → minimize it
+5. If found but not focused → activate it
+6. If not found → launch the application
+
+## Uninstallation
+
+### Using dpkg
+```bash
+sudo dpkg -r togler
 ```
 
----
+### Using apt
+```bash
+sudo apt remove togler
+```
 
-## 🔧 Advanced Usage
+### Manual uninstall
+```bash
+sudo make uninstall
+```
 
-### Extension Management
+### Remove user configuration (optional)
+```bash
+rm -rf ~/.config/togler
+```
 
-```sh
-# Check if Wayland extension is installed
-ls ~/.local/share/gnome-shell/extensions/togler@local/
+## Examples
 
-# Manual extension setup
-togler --setup-wayland
+### Toggle Chrome
+```bash
+togler -t chrome
+```
 
-# View extension status
+### Toggle Terminal
+```bash
+togler -t terminal
+```
+
+### Toggle Custom App
+```bash
+togler -t slack
+```
+
+### Bind to Keyboard Shortcut
+
+In GNOME Settings → Keyboard → Custom Shortcuts:
+- **Command**: `togler -t terminal`
+- **Shortcut**: `Super+Enter` (or your preference)
+
+## Troubleshooting
+
+### Extension not loading
+```bash
+# Check if extension is installed
 gnome-extensions list | grep togler
+
+# Enable the extension
+gnome-extensions enable togler@local
+
+# Check extension status
+gnome-extensions info togler@local
 ```
 
-### Troubleshooting
+### D-Bus errors
+```bash
+# Verify extension is running
+gdbus introspect --session \
+  --dest org.gnome.Shell \
+  --object-path /org/gnome/Shell/Extensions/Togler
+```
 
-**Wayland not working?**
+### Application not toggling
+- Check if the app is in your config: `togler -l`
+- Verify the WM_CLASS matches your running application
+- Edit config if needed: `togler -e`
 
-1. Restart GNOME Shell: `Alt+F2` → `r` → `Enter`
-2. Check extension: `gnome-extensions list | grep togler`
-3. Manual setup: `togler --setup-wayland`
-4. Log out/in if needed
+## Contributing
 
-**X11 not working?**
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Install xdotool: `sudo apt install xdotool`
-2. Check session: `echo $XDG_SESSION_TYPE`
+## License
 
----
+This project is open source. See LICENSE file for details.
 
-## 📚 Example Workflows
+## Author
 
-**Web Developer** (any session type):
+Caesar - [GitHub](https://github.com/caesar003)
 
--   `Super+1` Firefox
--   `Super+2` VS Code
--   `Super+3` Terminal
+## Links
 
-**Writer** (Wayland or X11):
-
--   `Super+1` LibreOffice
--   `Super+2` Research Browser
--   `Super+3` Notes
-
-**Sysadmin** (works everywhere):
-
--   `Super+1` Terminal
--   `Super+2` Monitoring
--   `Super+3` Documentation
-
----
-
-## 🎯 Migration from X11-only versions
-
-Existing users upgrading from X11-only versions:
-
-✅ **No changes needed** - existing shortcuts continue working  
-✅ **Wayland detection** - automatic on first Wayland use  
-✅ **Backward compatible** - X11 functionality unchanged
-
----
-
-Made with ❤️ by [Caesar](https://github.com/caesar003) · 🪪 MIT License
+- **Repository**: https://github.com/caesar003/togler
+- **Issues**: https://github.com/caesar003/togler/issues
+- **Man Page**: `man togler`r

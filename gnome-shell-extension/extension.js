@@ -1,4 +1,4 @@
-import Gio from 'gi://Gio';
+import Gio from "gi://Gio";
 
 const TOG_DBUS_IFACE = `
 <node>
@@ -13,8 +13,8 @@ const TOG_DBUS_IFACE = `
 export default class ToglerExtension {
   enable() {
     this._dbus = Gio.DBusExportedObject.wrapJSObject(TOG_DBUS_IFACE, this);
-    this._dbus.export(Gio.DBus.session, '/org/gnome/Shell/Extensions/Togler');
-    console.log('Togler extension enabled - D-Bus object exported');
+    this._dbus.export(Gio.DBus.session, "/org/gnome/Shell/Extensions/Togler");
+    console.log("Togler extension enabled - D-Bus object exported");
   }
 
   disable() {
@@ -23,34 +23,46 @@ export default class ToglerExtension {
       this._dbus.unexport();
       this._dbus = null;
     }
-    console.log('Togler extension disabled');
+    console.log("Togler extension disabled");
   }
 
+  /* extension.js — inside your class */
   ToggleByWmClass(wmclass) {
     try {
       const actors = global.get_window_actors();
-      const windows = actors.map(a => a.get_meta_window()).filter(Boolean);
-      const matches = windows.filter(w => w.get_wm_class() === wmclass);
+      const windows = actors.map((a) => a.get_meta_window()).filter(Boolean);
 
+      // Some windows return an array or string; normalize if needed
+      const matches = windows.filter((w) => {
+        try {
+          return w.get_wm_class && w.get_wm_class() === wmclass;
+        } catch (e) {
+          return false;
+        }
+      });
+
+      // No matching window found — return false so caller can launch the app
       if (!matches.length) {
-        Gio.AppInfo.create_from_commandline(app_cmd).launch();
-        return true;
+        return false;
       }
 
       const now = global.get_current_time();
       const focused = global.display.focus_window;
 
+      // If focused and belongs to matches, minimize it
       if (focused && matches.includes(focused)) {
         focused.minimize();
         return true;
       }
 
+      // Otherwise activate the first match
       const target = matches[0];
       target.get_workspace()?.activate(now);
       target.activate(now);
       return true;
     } catch (err) {
-      console.error('Togler: error in ToggleByWmClass', err);
+      // Log error and return false to indicate we didn't toggle
+      console.error("Togler: error in ToggleByWmClass", err);
       return false;
     }
   }
